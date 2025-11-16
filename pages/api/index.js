@@ -51,6 +51,23 @@ export default async function handler(req, res) {
       message: "Server error while proxying upstream API",
     });
   }
+}
+    if (typeof payload === "object" && payload !== null) {
+      payload.developer_message = developerMessage;
+      payload.developer_tag = developerTag;
+      payload._proxied_from = upstreamUrl.origin;
+      payload._proxied_url = upstreamUrl.pathname + upstreamUrl.search;
+    }
+
+    const statusToReturn = r.status >= 200 && r.status < 600 ? r.status : 200;
+    res.status(statusToReturn).json(payload);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      message: "Server error while proxying upstream API",
+    });
+  }
 }        upstreamStatus: r.status,
         upstreamTextPreview:
           typeof text === "string" ? text.slice(0, 2000) : String(text),
