@@ -5,17 +5,12 @@ export default async function handler(req, res) {
     "https://raspy-glitter-2fbb.sharmar65195.workers.dev/";
 
   try {
-    // Build upstream URL and copy incoming query params
     const upstreamUrl = new URL(REMOTE_BASE);
     Object.entries(req.query || {}).forEach(([k, v]) => {
-      if (Array.isArray(v)) {
-        v.forEach((val) => upstreamUrl.searchParams.append(k, val));
-      } else {
-        upstreamUrl.searchParams.append(k, v);
-      }
+      if (Array.isArray(v)) v.forEach((val) => upstreamUrl.searchParams.append(k, val));
+      else upstreamUrl.searchParams.append(k, v);
     });
 
-    // Fetch upstream
     const r = await fetch(upstreamUrl.toString(), {
       headers: {
         "User-Agent": "Mozilla/5.0",
@@ -25,36 +20,28 @@ export default async function handler(req, res) {
 
     const text = await r.text();
 
-    // Try parse JSON
     let payload;
     try {
       payload = JSON.parse(text);
     } catch (parseErr) {
-      // Upstream returned non-JSON (HTML or error) — helpful debug response
       return res.status(502).json({
         success: false,
         message: "Upstream did not return valid JSON",
         upstreamStatus: r.status,
         upstreamTextPreview:
           typeof text === "string" ? text.slice(0, 2000) : String(text),
-        _proxied_from: upstreamUrl.origin,
-        _proxied_url: upstreamUrl.pathname + upstreamUrl.search,
       });
     }
 
-    // Override developer credit fields (env or defaults)
     const developerMessage = process.env.CREDIT_USERNAME || "@MessiTrace_Networks";
     const developerTag = process.env.CREDIT_TAG || "Api By R.K";
 
     if (typeof payload === "object" && payload !== null) {
       payload.developer_message = developerMessage;
       payload.developer_tag = developerTag;
-      // optional metadata
-      payload._proxied_from = upstreamUrl.origin;
-      payload._proxied_url = upstreamUrl.pathname + upstreamUrl.search;
+      // metadata removed on purpose
     }
 
-    // Return with upstream-like status (or 200)
     const statusToReturn = r.status >= 200 && r.status < 600 ? r.status : 200;
     return res.status(statusToReturn).json(payload);
   } catch (err) {
