@@ -6,6 +6,7 @@ export default async function handler(req, res) {
 
   try {
     const upstreamUrl = new URL(REMOTE_BASE);
+
     Object.entries(req.query || {}).forEach(([k, v]) => {
       if (Array.isArray(v)) v.forEach((val) => upstreamUrl.searchParams.append(k, val));
       else upstreamUrl.searchParams.append(k, v);
@@ -19,50 +20,32 @@ export default async function handler(req, res) {
     });
 
     const text = await r.text();
-
     let payload;
+
     try {
       payload = JSON.parse(text);
-    } catch (parseErr) {
+    } catch {
       return res.status(502).json({
         success: false,
         message: "Upstream did not return valid JSON",
         upstreamStatus: r.status,
-        upstreamTextPreview:
-          typeof text === "string" ? text.slice(0, 2000) : String(text),
+        upstreamTextPreview: text.slice(0, 2000),
       });
     }
 
-    // ❌ Remove unwanted developer names from upstream
-    delete payload.developer;
-    delete payload.brand;
+    // ------------------------------------
+    // 🔥 REPLACE THESE TWO KEYS FORCEFULLY
+    // ------------------------------------
+    payload.developer = "@MessiTrace_Networks";   // Your name
+    payload.brand = "Api By R.K";                 // Your brand
 
-    // ✅ Add your developer credit
-    const developerMessage = process.env.CREDIT_USERNAME || "@MessiTrace_Networks";
-    const developerTag = process.env.CREDIT_TAG || "Api By R.K";
-
-    payload.developer_message = developerMessage;
-    payload.developer_tag = developerTag;
-
-    const statusToReturn = r.status >= 200 && r.status < 600 ? r.status : 200;
-    return res.status(statusToReturn).json(payload);
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      error: err.message,
-      message: "Server error while proxying upstream API",
-    });
-  }
-}    const developerTag = process.env.CREDIT_TAG || "Api By R.K";
-
-    if (typeof payload === "object" && payload !== null) {
-      payload.developer_message = developerMessage;
-      payload.developer_tag = developerTag;
-      // metadata removed on purpose
-    }
+    // ❌ DO NOT ADD developer_message or developer_tag ANYMORE
+    delete payload.developer_message;
+    delete payload.developer_tag;
 
     const statusToReturn = r.status >= 200 && r.status < 600 ? r.status : 200;
     return res.status(statusToReturn).json(payload);
+
   } catch (err) {
     return res.status(500).json({
       success: false,
