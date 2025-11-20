@@ -7,6 +7,7 @@ export default async function handler(req, res) {
   try {
     const upstreamUrl = new URL(REMOTE_BASE);
 
+    // Pass query params to upstream
     Object.entries(req.query || {}).forEach(([k, v]) => {
       if (Array.isArray(v)) v.forEach((val) => upstreamUrl.searchParams.append(k, val));
       else upstreamUrl.searchParams.append(k, v);
@@ -20,37 +21,36 @@ export default async function handler(req, res) {
     });
 
     const text = await r.text();
-    let payload;
 
+    let payload;
     try {
       payload = JSON.parse(text);
-    } catch {
+    } catch (err) {
       return res.status(502).json({
         success: false,
-        message: "Upstream did not return valid JSON",
+        message: "Upstream returned invalid JSON",
         upstreamStatus: r.status,
-        upstreamTextPreview: text.slice(0, 2000),
+        preview: text.slice(0, 2000),
       });
     }
 
-    // ------------------------------------
-    // 🔥 REPLACE THESE TWO KEYS FORCEFULLY
-    // ------------------------------------
-    payload.developer = "@MessiTrace_Networks";   // Your name
-    payload.brand = "Api By R.K";                 // Your brand
-
-    // ❌ DO NOT ADD developer_message or developer_tag ANYMORE
+    // ❌ Remove any developer credits upstream sends
+    delete payload.developer;
+    delete payload.brand;
     delete payload.developer_message;
     delete payload.developer_tag;
 
-    const statusToReturn = r.status >= 200 && r.status < 600 ? r.status : 200;
-    return res.status(statusToReturn).json(payload);
+    // ✅ Add ONLY your credits (Final)
+    payload.developer = "@MessiTrace_Networks";
+    payload.brand = "Api By R K";
+
+    return res.status(200).json(payload);
 
   } catch (err) {
     return res.status(500).json({
       success: false,
+      message: "Server error",
       error: err.message,
-      message: "Server error while proxying upstream API",
     });
   }
 }
