@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   const REMOTE_BASE =
     process.env.REMOTE_API_BASE ||
-    "https://raspy-glitter-2fbb.sharmar65195.workers.dev/";
+    "https://splexxo-bhai.vercel.app/api/seller";
 
   try {
     const upstreamUrl = new URL(REMOTE_BASE);
