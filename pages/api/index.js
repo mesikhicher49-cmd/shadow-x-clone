@@ -34,11 +34,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // ❌ Remove any developer credits upstream sends
+    // ❌ Remove any developer/credit info upstream sends
     delete payload.developer;
     delete payload.brand;
     delete payload.developer_message;
     delete payload.developer_tag;
+    delete payload.credit_by;      // 👈 yeh new hai
+    delete payload.powered_by;     // 👈 yeh new hai
 
     // ✅ Add ONLY your credits (Final)
     payload.developer = "@rkmod_x";
