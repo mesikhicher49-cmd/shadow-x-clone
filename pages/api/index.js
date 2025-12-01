@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     delete payload.developer_tag;
 
     // ✅ Add ONLY your credits (Final)
-    payload.developer = "@MessiTrace_Networks";
+    payload.developer = "@rkmod_x";
     payload.brand = "Api By R K";
 
     return res.status(200).json(payload);
