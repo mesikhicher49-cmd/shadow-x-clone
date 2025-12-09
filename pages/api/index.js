@@ -1,25 +1,20 @@
+# replace the file exactly (POSIX / Linux / macOS / WSL)
+cat > pages/api/index.js <<'EOF'
 // pages/api/index.js
-
 export default async function handler(req, res) {
-  // Upstream API base
   const REMOTE_BASE =
     process.env.REMOTE_API_BASE ||
     "https://reflexinfox.fwh.is/num.php";
 
   try {
-    // URL banao
     const upstreamUrl = new URL(REMOTE_BASE);
 
-    // Sare query params (number, api_key, etc.) forward karo
+    // forward query params (number, api_key, etc.)
     Object.entries(req.query || {}).forEach(([k, v]) => {
-      if (Array.isArray(v)) {
-        v.forEach((val) => upstreamUrl.searchParams.append(k, val));
-      } else {
-        upstreamUrl.searchParams.append(k, v);
-      }
+      if (Array.isArray(v)) v.forEach((val) => upstreamUrl.searchParams.append(k, val));
+      else upstreamUrl.searchParams.append(k, v);
     });
 
-    // Upstream ko call
     const r = await fetch(upstreamUrl.toString(), {
       headers: {
         "User-Agent": "Mozilla/5.0",
@@ -29,11 +24,9 @@ export default async function handler(req, res) {
 
     const html = await r.text();
 
-    // HTML ke andar se { ... } wala JSON nikaalne ki koshish
+    // extract first {...} block from HTML
     const match = html.match(/\{[\s\S]*\}/);
-
     if (!match) {
-      // Agar JSON mila hi nahi
       return res.status(502).json({
         success: false,
         message: "No JSON found in upstream response",
@@ -43,9 +36,7 @@ export default async function handler(req, res) {
     }
 
     let payload;
-
     try {
-      // Jo { ... } mila usko parse karo
       payload = JSON.parse(match[0]);
     } catch (err) {
       return res.status(502).json({
@@ -56,23 +47,23 @@ export default async function handler(req, res) {
       });
     }
 
-    // Reflex InfoX ke credits hatao
-    delete payload.developer;
-    delete payload.credit;
-    delete payload.brand;
-    delete payload.developer_message;
-    delete payload.developer_tag;
-    delete payload.powered_by;
-    delete payload.credit_by;
+    // remove unwanted keys
+    [
+      "developer",
+      "credit",
+      "brand",
+      "developer_message",
+      "developer_tag",
+      "powered_by",
+      "credit_by",
+    ].forEach((k) => delete payload[k]);
 
-    // Apne credits daalo
+    // add your credits
     payload.developer = "@rkmod_x";
     payload.brand = "Api By R K";
 
-    // Final response
     return res.status(200).json(payload);
   } catch (err) {
-    // Server error
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -80,3 +71,4 @@ export default async function handler(req, res) {
     });
   }
 }
+EOF
