@@ -1,57 +1,57 @@
-// pages/api/index.js
-
 export default async function handler(req, res) {
-  // NEW API SET HERE ↓
   const REMOTE_BASE =
     process.env.REMOTE_API_BASE ||
     "https://reflexinfox.fwh.is/num.php";
 
   try {
-    // Build URL with ?number=
     const upstreamUrl = new URL(REMOTE_BASE);
 
-    // Pass all query params (number included)
+    // Pass all query params
     Object.entries(req.query || {}).forEach(([k, v]) => {
-      if (Array.isArray(v)) {
-        v.forEach((val) => upstreamUrl.searchParams.append(k, val));
-      } else {
-        upstreamUrl.searchParams.append(k, v);
-      }
+      upstreamUrl.searchParams.append(k, v);
     });
 
     const r = await fetch(upstreamUrl.toString(), {
       headers: {
         "User-Agent": "Mozilla/5.0",
-        Accept: "application/json, text/plain, */*",
+        Accept: "*/*",
       },
     });
 
-    const text = await r.text();
+    const html = await r.text();
 
-    let payload;
-    try {
-      payload = JSON.parse(text);
-    } catch (err) {
+    // 🟢 Extract JSON using regex
+    const match = html.match(/\{[\s\S]*\}/);
+    if (!match) {
       return res.status(502).json({
         success: false,
-        message: "Upstream returned invalid JSON",
-        upstreamStatus: r.status,
-        preview: text.slice(0, 2000),
+        message: "No JSON found in upstream response",
+        preview: html.slice(0, 300),
       });
     }
 
-    // ❌ Remove Reflex InfoX credit tags
-    delete payload.developer;    // REFLEX InfoX
-    delete payload.credit;       // InfoX
+    let payload = {};
+    try {
+      payload = JSON.parse(match[0]);
+    } catch (err) {
+      return res.status(502).json({
+        success: false,
+        message: "JSON extract parse error",
+        preview: match[0].slice(0, 300),
+      });
+    }
 
-    // ❌ Extra unwanted (safe side)
+    // ❌ Remove Reflex InfoX credits
+    delete payload.developer;
+    delete payload.credit;
+
+    // ❌ Extra protection
     delete payload.brand;
-    delete payload.developer_message;
     delete payload.developer_tag;
     delete payload.powered_by;
     delete payload.credit_by;
 
-    // ✅ Add your own credits
+    // ✅ Add your credits
     payload.developer = "@rkmod_x";
     payload.brand = "Api By R K";
 
@@ -60,8 +60,9 @@ export default async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server Error",
       error: err.message,
     });
   }
+}  }
 }
