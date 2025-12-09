@@ -1,53 +1,81 @@
+// pages/api/index.js
 export default async function handler(req, res) {
   try {
-    const number = req.query.number;
-    const api_key = req.query.api_key;
-
-    if (!number || !api_key) {
+    // Accept either ?num= or ?number= from the caller
+    const num = req.query.num || req.query.number;
+    if (!num) {
       return res.status(400).json({
         success: false,
-        message: "number and api_key required"
+        message: "Missing required query parameter: num (or number)",
+        usage: "/api?num=9050402042",
       });
     }
 
-    // 🔥 FINAL BROWSERLESS BYPASS URL
-    const finalUrl =
-      `https://api.allorigins.win/raw?url=` +
-      encodeURIComponent(
-        `https://reflexinfox.fwh.is/num.php?mobile=${number}&key=${api_key}`
-      );
+    // Upstream base
+    const REMOTE_BASE = "https://numapi.anshapi.workers.dev/";
 
-    const r = await fetch(finalUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
+    // Build upstream URL with required param name 'num'
+    const upstreamUrl = new URL(REMOTE_BASE);
+    upstreamUrl.searchParams.append("num", num);
+
+    // Forward any other query params optionally (like country, etc.)
+    // but avoid duplicating num
+    Object.entries(req.query || {}).forEach(([k, v]) => {
+      if (k === "num" || k === "number") return;
+      if (Array.isArray(v)) v.forEach((val) => upstreamUrl.searchParams.append(k, val));
+      else upstreamUrl.searchParams.append(k, v);
     });
 
-    const txt = await r.text();
+    const r = await fetch(upstreamUrl.toString(), {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Accept: "application/json, text/plain, */*",
+      },
+    });
 
-    let data;
-    try {
-      data = JSON.parse(txt);
-    } catch (e) {
-      return res.status(500).json({
+    // Upstream error handling
+    const text = await r.text();
+    if (!r.ok) {
+      return res.status(502).json({
         success: false,
-        message: "Upstream not returning valid JSON",
-        preview: txt.slice(0, 500)
+        message: "Upstream returned error",
+        upstreamStatus: r.status,
+        preview: text.slice(0, 800),
       });
     }
 
-    // ❌ Remove original credits
-    delete data.developer;
-    delete data.credit;
+    // Try parse JSON
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch (err) {
+      return res.status(502).json({
+        success: false,
+        message: "Upstream returned invalid JSON",
+        preview: text.slice(0, 800),
+      });
+    }
 
-    // ✔ Add your credits
-    data.developer = "@rkmod_x";
-    data.brand = "Api By R K";
+    // Remove any upstream credits and add yours
+    [
+      "developer",
+      "developer_name",
+      "dev",
+      "credit",
+      "brand",
+      "powered_by",
+      "made_by",
+    ].forEach((k) => delete payload[k]);
 
-    return res.status(200).json(data);
+    payload.developer = "@rkmod_x";
+    payload.brand = "Api By R K";
 
+    return res.status(200).json(payload);
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Server error",
+      error: err.message,
     });
   }
 }
