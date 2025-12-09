@@ -1,53 +1,57 @@
+// pages/api/index.js
 export default async function handler(req, res) {
-  const REMOTE_BASE = "https://numapi.anshapi.workers.dev/";
-
   try {
-    const upstreamUrl = new URL(REMOTE_BASE);
-    Object.entries(req.query || {}).forEach(([k, v]) => {
-      upstreamUrl.searchParams.append(k, v);
-    });
+    // Accept original parameters used in PHP
+    const mobile = req.query.mobile;
+    const key = req.query.key;
 
-    const r = await fetch(upstreamUrl.toString(), {
+    if (!mobile || !key) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing parameters: mobile & key are required",
+      });
+    }
+
+    // Upstream NUM API
+    const upstreamUrl = `https://numapi.anshapi.workers.dev/?num=${encodeURIComponent(
+      mobile
+    )}`;
+
+    const r = await fetch(upstreamUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0",
-        Accept: "application/json, text/plain, */*",
+        Accept: "application/json",
       },
     });
 
-    if (!r.ok) {
-      const t = await r.text();
-      return res.status(502).json({ success: false, message: "Upstream error", upstreamStatus: r.status, preview: t.slice(0, 300) });
+    const text = await r.text();
+
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch (e) {
+      return res.status(502).json({
+        success: false,
+        message: "Upstream returned invalid JSON",
+        preview: text.slice(0, 300),
+      });
     }
 
-    const payload = await r.json();
-
-    // Remove any unwanted credit fields (agar koi ho)
+    // Remove original credits
     delete payload.developer;
     delete payload.credit;
     delete payload.brand;
 
-    // Add your own credit
+    // Add your credit
     payload.developer = "@rkmod_x";
     payload.brand = "Api By R K";
 
-    return res.status(200).json(payload);
-
-  } catch (err) {
-    return res.status(500).json({ success:false, message:"Server error", error: err.message });
-  }
-}      "powered_by",
-      "made_by",
-    ].forEach((k) => delete payload[k]);
-
-    payload.developer = "@rkmod_x";
-    payload.brand = "Api By R K";
-
+    // Return final JSON
     return res.status(200).json(payload);
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: "Server error",
-      error: err.message,
+      message: err.message,
     });
   }
 }
