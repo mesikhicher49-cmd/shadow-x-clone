@@ -1,16 +1,22 @@
 // pages/api/index.js
+
 export default async function handler(req, res) {
+  // NEW API SET HERE ↓
   const REMOTE_BASE =
     process.env.REMOTE_API_BASE ||
-    "https://splexxo-bhai.vercel.app/api/seller";
+    "https://reflexinfox.fwh.is/num.php";
 
   try {
+    // Build URL with ?number=
     const upstreamUrl = new URL(REMOTE_BASE);
 
-    // Pass query params to upstream
+    // Pass all query params (number included)
     Object.entries(req.query || {}).forEach(([k, v]) => {
-      if (Array.isArray(v)) v.forEach((val) => upstreamUrl.searchParams.append(k, val));
-      else upstreamUrl.searchParams.append(k, v);
+      if (Array.isArray(v)) {
+        v.forEach((val) => upstreamUrl.searchParams.append(k, val));
+      } else {
+        upstreamUrl.searchParams.append(k, v);
+      }
     });
 
     const r = await fetch(upstreamUrl.toString(), {
@@ -34,15 +40,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // ❌ Remove any developer/credit info upstream sends
-    delete payload.developer;
+    // ❌ Remove Reflex InfoX credit tags
+    delete payload.developer;    // REFLEX InfoX
+    delete payload.credit;       // InfoX
+
+    // ❌ Extra unwanted (safe side)
     delete payload.brand;
     delete payload.developer_message;
     delete payload.developer_tag;
-    delete payload.credit_by;      // 👈 yeh new hai
-    delete payload.powered_by;     // 👈 yeh new hai
+    delete payload.powered_by;
+    delete payload.credit_by;
 
-    // ✅ Add ONLY your credits (Final)
+    // ✅ Add your own credits
     payload.developer = "@rkmod_x";
     payload.brand = "Api By R K";
 
