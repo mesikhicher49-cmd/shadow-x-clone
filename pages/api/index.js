@@ -11,7 +11,6 @@ if (!mobile || !key) {
   });
 }
 
-// New upstream API
 const upstreamUrl = `https://usesirosint.vercel.app/api/numinfo?key=NIGHTFALLHUBz&num=${encodeURIComponent(mobile)}`;
 
 const r = await fetch(upstreamUrl, {
@@ -29,7 +28,10 @@ delete data.credit;
 delete data.brand;
 delete data.Owner;
 
-// Add your owner
+// Replace API BY with your name
+data["API BY"] = "@ZyroXZone";
+
+// Add owner
 data.Owner = "@ZyroX9";
 
 return res.status(200).json(data);
