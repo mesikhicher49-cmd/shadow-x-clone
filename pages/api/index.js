@@ -1,7 +1,6 @@
 // pages/api/index.js
 export default async function handler(req, res) {
 try {
-// Accept original parameters used in PHP
 const mobile = req.query.mobile;
 const key = req.query.key;
 
@@ -12,10 +11,8 @@ if (!mobile || !key) {
   });
 }
 
-// Upstream NUM API
-const upstreamUrl = `https://numapi.anshapi.workers.dev/?num=${encodeURIComponent(
-  mobile
-)}`;
+// New upstream API
+const upstreamUrl = `https://usesirosint.vercel.app/api/numinfo?key=NIGHTFALLHUBz&num=${encodeURIComponent(mobile)}`;
 
 const r = await fetch(upstreamUrl, {
   headers: {
@@ -24,30 +21,18 @@ const r = await fetch(upstreamUrl, {
   },
 });
 
-const text = await r.text();
-
-let payload;
-try {
-  payload = JSON.parse(text);
-} catch (e) {
-  return res.status(502).json({
-    success: false,
-    message: "Upstream returned invalid JSON",
-    preview: text.slice(0, 300),
-  });
-}
+const data = await r.json();
 
 // Remove original credits
-delete payload.developer;
-delete payload.credit;
-delete payload.brand;
-delete payload.Owner;
+delete data.developer;
+delete data.credit;
+delete data.brand;
+delete data.Owner;
 
-// Set your owner only
-payload.Owner = "@ZyroX9";
+// Add your owner
+data.Owner = "@ZyroX9";
 
-// Return final JSON
-return res.status(200).json(payload);
+return res.status(200).json(data);
 
 } catch (err) {
 return res.status(500).json({
