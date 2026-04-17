@@ -10,8 +10,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Hardcoded API (key hidden)
-    const upstreamUrl = `https://yash-code-with-ai.alphamovies.workers.dev/?num=${encodeURIComponent(mobile)}&key=7189814021`;
+    // ✅ New API added
+    const upstreamUrl = `https://shadow-num-info.babuvikram614.workers.dev/?num=${encodeURIComponent(mobile)}&key=Darkaura`;
 
     const r = await fetch(upstreamUrl, {
       headers: {
@@ -20,9 +20,18 @@ export default async function handler(req, res) {
       },
     });
 
-    const data = await r.json();
+    // ❗ Agar response JSON na ho to error handle
+    let data;
+    try {
+      data = await r.json();
+    } catch {
+      return res.status(500).json({
+        success: false,
+        message: "Invalid JSON response from upstream API",
+      });
+    }
 
-    // ❌ Remove all credits
+    // ❌ Unwanted fields remove
     const removeFields = [
       "developer",
       "credit",
@@ -32,11 +41,13 @@ export default async function handler(req, res) {
       "owner_contact"
     ];
 
-    removeFields.forEach(field => delete data[field]);
+    removeFields.forEach(field => {
+      if (data[field]) delete data[field];
+    });
 
     // ✅ Apna credit add
     data["API BY"] = "@ZyroXZone";
-    data.Owner = "@ZyroX9";
+    data["Owner"] = "@ZyroX9";
 
     return res.status(200).json(data);
 
