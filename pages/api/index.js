@@ -10,7 +10,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Your API
     const upstreamUrl = `https://all-in-one-api-hub.onrender.com/num?key=Z4X-58E1I43X-Silent&number=${encodeURIComponent(mobile)}`;
 
     const r = await fetch(upstreamUrl, {
@@ -26,12 +25,17 @@ export default async function handler(req, res) {
     } catch {
       return res.status(500).json({
         success: false,
-        message: "Invalid JSON response from upstream API",
+        message: "Invalid JSON response",
       });
     }
 
-    // ❌ Remove unwanted fields
+    // ❌ Remove unwanted fields (ye sab hat jayenge)
     const removeFields = [
+      "Owner",
+      "owner",
+      "API BY",
+      "channel",
+      "validity",
       "developer",
       "credit",
       "brand",
@@ -44,12 +48,10 @@ export default async function handler(req, res) {
       if (data[field]) delete data[field];
     });
 
-    // ✅ Replace owner
+    // ✅ Apni fields add karo
     data["owner"] = "ZYRO PAPA";
-
-    // ✅ Add your credit
-    data["API BY"] = "@ZyroXZone";
-    data["Owner"] = "@ZyroX9";
+    data["API By"] = "@ZyroX9";
+    data["Channel"] = "@ZyroXZone";
 
     return res.status(200).json(data);
 
