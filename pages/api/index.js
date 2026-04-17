@@ -29,8 +29,16 @@ export default async function handler(req, res) {
       });
     }
 
-    // ❌ Remove unwanted fields (ye sab hat jayenge)
+    // ❌ Remove unwanted fields
     const removeFields = [
+      "warning",
+      "status",
+      "code",
+      "searched_number",
+      "response_time",
+      "source_used",
+      "mode",
+      "count",
       "Owner",
       "owner",
       "API BY",
