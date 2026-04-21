@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     }
 
     // 🔗 Your API (only one)
-    const apiUrl = `https://leakosintprobynoneusr.onrender.com/raavan/v34/query=${encodeURIComponent(mobile)}/key=noneusrX12-NW3gtFVnOh6pkxl1UKRUrLR0zkGexJB3`;
+    const apiUrl = `https://leakosintprobynoneu.onrender.com/raavan/v34/query=${encodeURIComponent(mobile)}/key=noneusrX12-NW3gtFVnOh6pkxl1UKRUrLR0zkGexJB3`;
 
     // 📡 Fetch data
     const response = await fetch(apiUrl, {
