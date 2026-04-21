@@ -1,28 +1,42 @@
 // pages/api/index.js
+
 export default async function handler(req, res) {
   try {
     const mobile = req.query.mobile;
 
-    if (!mobile) {
+    // ❌ Validate input
+    if (!mobile || mobile.length < 8) {
       return res.status(400).json({
         success: false,
-        message: "Missing parameter: mobile is required",
+        message: "Valid mobile number required",
       });
     }
 
-    const upstreamUrl = `https://all-in-one-api-hub.onrender.com/num?key=Z4X-58E1I43X-Silent&number=${encodeURIComponent(mobile)}`;
+    // 🔗 Your API (only one)
+    const apiUrl = `https://leakosintprobynoneusr.onrender.com/raavan/v34/query=${encodeURIComponent(mobile)}/key=noneusrX12-NW3gtFVnOh6pkxl1UKRUrLR0zkGexJB3`;
 
-    const r = await fetch(upstreamUrl, {
+    // 📡 Fetch data
+    const response = await fetch(apiUrl, {
+      method: "GET",
       headers: {
         "User-Agent": "Mozilla/5.0",
         Accept: "application/json",
       },
     });
 
+    // ❌ Handle API error
+    if (!response.ok) {
+      return res.status(response.status).json({
+        success: false,
+        message: "Upstream API error",
+      });
+    }
+
     let data;
+
     try {
-      data = await r.json();
-    } catch {
+      data = await response.json();
+    } catch (e) {
       return res.status(500).json({
         success: false,
         message: "Invalid JSON response",
@@ -49,24 +63,28 @@ export default async function handler(req, res) {
       "brand",
       "branding",
       "processed_by",
-      "owner_contact"
+      "owner_contact",
     ];
 
-    removeFields.forEach(field => {
-      if (data[field]) delete data[field];
+    removeFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(data, field)) {
+        delete data[field];
+      }
     });
 
-    // ✅ Apni fields add karo
-    data["owner"] = "ZYRO PAPA";
-    data["API By"] = "@ZyroX9";
-    data["Channel"] = "@ZyroXZone";
+    // ✅ Final response
+    return res.status(200).json({
+      success: true,
+      ...data,
+      owner: "ZYRO PAPA",
+      api_by: "@ZyroX9",
+      channel: "@ZyroXZone",
+    });
 
-    return res.status(200).json(data);
-
-  } catch (err) {
+  } catch (error) {
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Internal server error",
     });
   }
 }
