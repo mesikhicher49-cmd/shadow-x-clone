@@ -12,8 +12,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔗 Your API (only one)
-    const apiUrl = `https://leakosintprobynoneu.onrender.com/raavan/v34/query=${encodeURIComponent(mobile)}/key=noneusrX12-NW3gtFVnOh6pkxl1UKRUrLR0zkGexJB3`;
+    // 🔗 NEW API (updated)
+    const apiUrl = `https://num-2-info.gamer.gd/info.php?key=17_DAY_TRIAL&number=${encodeURIComponent(mobile)}`;
 
     // 📡 Fetch data
     const response = await fetch(apiUrl, {
