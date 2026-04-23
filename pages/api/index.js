@@ -4,7 +4,6 @@ export default async function handler(req, res) {
   try {
     const mobile = req.query.mobile;
 
-    // ❌ Validate input
     if (!mobile || mobile.length < 8) {
       return res.status(400).json({
         success: false,
@@ -12,21 +11,17 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔗 API URL
     const apiUrl = `https://num-2-info.gamer.gd/info.php?key=17_DAY_TRIAL&number=${encodeURIComponent(mobile)}`;
 
-    // 📡 Fetch
     const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
         "User-Agent": "Mozilla/5.0",
-        Accept: "application/json",
       },
     });
 
-    // ❌ Upstream error
     if (!response.ok) {
-      return res.status(response.status).json({
+      return res.status(500).json({
         success: false,
         message: "Upstream API error",
       });
@@ -34,50 +29,43 @@ export default async function handler(req, res) {
 
     let data;
 
-    // 🔥 JSON + fallback
+    // 🔥 Safe parse (JSON + fallback)
     try {
       data = await response.json();
     } catch (e) {
       const text = await response.text();
-
       return res.status(200).json({
         success: false,
-        message: "API did not return JSON",
+        message: "Invalid API response",
         raw: text,
       });
     }
 
-    // 📦 Extract main result
-    const user = data?.result?.results?.[0];
+    // ❌ Remove unwanted fields (top level)
+    delete data.developer;
+    delete data.status;
+    delete data.credit;
+    delete data.owner;
+    delete data.channel;
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "No data found",
-      });
+    // ❌ Remove unwanted fields inside result
+    if (data.result) {
+      delete data.result.count;
     }
 
-    // ✅ Final clean response
-    return res.status(200).json({
-      success: true,
-      name: user.NAME || null,
-      father_name: user.fname || null,
-      address: user.ADDRESS || null,
-      mobile: user.MOBILE || null,
-      circle: user.circle || null,
-      id: user.id || null,
-      email: user.email || null,
-      alt: user.alt || null,
+    // ✅ Add your branding
+    data.owner = "ZYRO PAPA";
+    data.api_by = "@ZyroX9";
+    data.channel = "@ZyroXZone";
 
-      owner: "ZYRO PAPA",
-      api_by: "@ZyroX9",
-      channel: "@ZyroXZone",
-    });
+    // ✅ Send SAME structure response
+    return res.status(200).json(data);
 
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
+      error: error.message, // 👈 ye add kiya debug ke liye
     });
   }
 }
