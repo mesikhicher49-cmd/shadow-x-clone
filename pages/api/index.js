@@ -1,5 +1,3 @@
-// pages/api/index.js
-
 export default async function handler(req, res) {
   try {
     const mobile = req.query.mobile;
@@ -11,7 +9,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const apiUrl = `https://num-2-info.gamer.gd/info.php?key=17_DAY_TRIAL&number=${encodeURIComponent(mobile)}`;
+    // 🔗 YOUR WORKING API
+    const apiUrl = `https://shadow-num-info.babuvikram614.workers.dev/?num=${encodeURIComponent(mobile)}&key=Darkaura`;
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -27,35 +26,20 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔥 ONLY READ BODY ONCE
-    const text = await response.text();
+    // ✅ Direct JSON parse (ye wali API JSON deti hai)
+    const data = await response.json();
 
-    let data;
-
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      return res.status(200).json({
-        success: false,
-        message: "Invalid JSON from API",
-        raw: text,
-      });
-    }
-
-    // ❌ Remove unwanted fields
+    // ❌ Remove unwanted fields (optional)
     delete data.developer;
-    delete data.status;
     delete data.credit;
-
-    if (data.result) {
-      delete data.result.count;
-    }
+    delete data.owner;
 
     // ✅ Add your branding
     data.owner = "ZYRO PAPA";
     data.api_by = "@ZyroX9";
     data.channel = "@ZyroXZone";
 
+    // ✅ SAME response return
     return res.status(200).json(data);
 
   } catch (error) {
