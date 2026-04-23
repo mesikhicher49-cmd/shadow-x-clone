@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔗 NEW API (updated)
+    // 🔗 NEW API
     const apiUrl = `https://num-2-info.gamer.gd/info.php?key=17_DAY_TRIAL&number=${encodeURIComponent(mobile)}`;
 
     // 📡 Fetch data
@@ -34,7 +34,64 @@ export default async function handler(req, res) {
 
     let data;
 
+    // 🔥 FIX: JSON + TEXT fallback
     try {
+      data = await response.json();
+    } catch (e) {
+      const text = await response.text();
+
+      return res.status(200).json({
+        success: true,
+        raw: text,
+        note: "API not returning JSON",
+      });
+    }
+
+    // ❌ Remove unwanted fields
+    const removeFields = [
+      "warning",
+      "status",
+      "code",
+      "searched_number",
+      "response_time",
+      "source_used",
+      "mode",
+      "count",
+      "Owner",
+      "owner",
+      "API BY",
+      "channel",
+      "validity",
+      "developer",
+      "credit",
+      "brand",
+      "branding",
+      "processed_by",
+      "owner_contact",
+    ];
+
+    removeFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(data, field)) {
+        delete data[field];
+      }
+    });
+
+    // ✅ Final response
+    return res.status(200).json({
+      success: true,
+      ...data,
+      owner: "ZYRO PAPA",
+      api_by: "@ZyroX9",
+      channel: "@ZyroXZone",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+}    try {
       data = await response.json();
     } catch (e) {
       return res.status(500).json({
