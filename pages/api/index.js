@@ -12,10 +12,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔗 NEW API
+    // 🔗 API URL
     const apiUrl = `https://num-2-info.gamer.gd/info.php?key=17_DAY_TRIAL&number=${encodeURIComponent(mobile)}`;
 
-    // 📡 Fetch data
+    // 📡 Fetch
     const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       },
     });
 
-    // ❌ Handle API error
+    // ❌ Upstream error
     if (!response.ok) {
       return res.status(response.status).json({
         success: false,
@@ -34,105 +34,41 @@ export default async function handler(req, res) {
 
     let data;
 
-    // 🔥 FIX: JSON + TEXT fallback
+    // 🔥 JSON + fallback
     try {
       data = await response.json();
     } catch (e) {
       const text = await response.text();
 
       return res.status(200).json({
-        success: true,
-        raw: text,
-        note: "API not returning JSON",
-      });
-    }
-
-    // ❌ Remove unwanted fields
-    const removeFields = [
-      "warning",
-      "status",
-      "code",
-      "searched_number",
-      "response_time",
-      "source_used",
-      "mode",
-      "count",
-      "Owner",
-      "owner",
-      "API BY",
-      "channel",
-      "validity",
-      "developer",
-      "credit",
-      "brand",
-      "branding",
-      "processed_by",
-      "owner_contact",
-    ];
-
-    removeFields.forEach((field) => {
-      if (Object.prototype.hasOwnProperty.call(data, field)) {
-        delete data[field];
-      }
-    });
-
-    // ✅ Final response
-    return res.status(200).json({
-      success: true,
-      ...data,
-      owner: "ZYRO PAPA",
-      api_by: "@ZyroX9",
-      channel: "@ZyroXZone",
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-}    try {
-      data = await response.json();
-    } catch (e) {
-      return res.status(500).json({
         success: false,
-        message: "Invalid JSON response",
+        message: "API did not return JSON",
+        raw: text,
       });
     }
 
-    // ❌ Remove unwanted fields
-    const removeFields = [
-      "warning",
-      "status",
-      "code",
-      "searched_number",
-      "response_time",
-      "source_used",
-      "mode",
-      "count",
-      "Owner",
-      "owner",
-      "API BY",
-      "channel",
-      "validity",
-      "developer",
-      "credit",
-      "brand",
-      "branding",
-      "processed_by",
-      "owner_contact",
-    ];
+    // 📦 Extract main result
+    const user = data?.result?.results?.[0];
 
-    removeFields.forEach((field) => {
-      if (Object.prototype.hasOwnProperty.call(data, field)) {
-        delete data[field];
-      }
-    });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No data found",
+      });
+    }
 
-    // ✅ Final response
+    // ✅ Final clean response
     return res.status(200).json({
       success: true,
-      ...data,
+      name: user.NAME || null,
+      father_name: user.fname || null,
+      address: user.ADDRESS || null,
+      mobile: user.MOBILE || null,
+      circle: user.circle || null,
+      id: user.id || null,
+      email: user.email || null,
+      alt: user.alt || null,
+
       owner: "ZYRO PAPA",
       api_by: "@ZyroX9",
       channel: "@ZyroXZone",
