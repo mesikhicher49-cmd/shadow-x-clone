@@ -27,28 +27,26 @@ export default async function handler(req, res) {
       });
     }
 
+    // 🔥 ONLY READ BODY ONCE
+    const text = await response.text();
+
     let data;
 
-    // 🔥 Safe parse (JSON + fallback)
     try {
-      data = await response.json();
+      data = JSON.parse(text);
     } catch (e) {
-      const text = await response.text();
       return res.status(200).json({
         success: false,
-        message: "Invalid API response",
+        message: "Invalid JSON from API",
         raw: text,
       });
     }
 
-    // ❌ Remove unwanted fields (top level)
+    // ❌ Remove unwanted fields
     delete data.developer;
     delete data.status;
     delete data.credit;
-    delete data.owner;
-    delete data.channel;
 
-    // ❌ Remove unwanted fields inside result
     if (data.result) {
       delete data.result.count;
     }
@@ -58,14 +56,13 @@ export default async function handler(req, res) {
     data.api_by = "@ZyroX9";
     data.channel = "@ZyroXZone";
 
-    // ✅ Send SAME structure response
     return res.status(200).json(data);
 
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error.message, // 👈 ye add kiya debug ke liye
+      error: error.message,
     });
   }
 }
