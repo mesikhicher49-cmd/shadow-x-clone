@@ -9,8 +9,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔗 YOUR WORKING API
-    const apiUrl = `https://shadow-num-info.babuvikram614.workers.dev/?num=${encodeURIComponent(mobile)}&key=Darkaura`;
+    // 🔗 NEW API
+    const apiUrl = `https://support-toxic.vercel.app/?mobile=${encodeURIComponent(mobile)}`;
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -26,20 +26,24 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Direct JSON parse (ye wali API JSON deti hai)
+    // ✅ Parse JSON
     const data = await response.json();
 
-    // ❌ Remove unwanted fields (optional)
-    delete data.developer;
+    // ❌ Remove unwanted fields
     delete data.credit;
+    delete data.channel;
+    delete data.api;
+    delete data.source;
+    delete data.days_remaining;
+    delete data.developer;
     delete data.owner;
 
-    // ✅ Add your branding
+    // ✅ Add your branding only
     data.owner = "ZYRO PAPA";
     data.api_by = "@ZyroX9";
     data.channel = "@ZyroXZone";
 
-    // ✅ SAME response return
+    // ✅ Return final response
     return res.status(200).json(data);
 
   } catch (error) {
