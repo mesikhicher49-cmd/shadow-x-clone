@@ -9,8 +9,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔗 NEW API
-    const apiUrl = `https://support-toxic.vercel.app/?mobile=${encodeURIComponent(mobile)}`;
+    // New API
+    const apiUrl = `https://api-master-flame.vercel.app/search?query=${encodeURIComponent(mobile)}`;
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -26,24 +26,19 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Parse JSON
     const data = await response.json();
 
-    // ❌ Remove unwanted fields
+    // Remove unwanted fields
     delete data.credit;
     delete data.channel;
-    delete data.api;
-    delete data.source;
+    delete data.api_valid_until;
     delete data.days_remaining;
-    delete data.developer;
-    delete data.owner;
 
-    // ✅ Add your branding only
+    // Add your branding
     data.owner = "ZYRO PAPA";
     data.api_by = "@ZyroX9";
     data.channel = "@ZyroXZone";
 
-    // ✅ Return final response
     return res.status(200).json(data);
 
   } catch (error) {
